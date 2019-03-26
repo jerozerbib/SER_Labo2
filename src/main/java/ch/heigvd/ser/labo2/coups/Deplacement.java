@@ -1,5 +1,7 @@
 package ch.heigvd.ser.labo2.coups;
 
+import static ch.heigvd.ser.labo2.coups.TypePiece.Pion;
+
 /**
  * Cette classe représente le déplacement d'une pièce ou d'un pion
  */
@@ -26,7 +28,7 @@ public class Deplacement extends Coup {
 
         super(coupSpecial);
 
-        if(pieceDeplacee == TypePiece.Pion && elimination != null && depart == null)
+        if(pieceDeplacee == Pion && elimination != null && depart == null)
             throw new Exception("Case de départ obligatoire si un pion élimine une pièce !");
 
         this.pieceDeplacee = pieceDeplacee;
@@ -47,9 +49,26 @@ public class Deplacement extends Coup {
      */
     @Override
     public String notationPGNimplem() {
+        String deplacement = pieceDeplacee.notationPGN();
+        if (depart != null && pieceDeplacee != Pion){
+            deplacement += depart.notationPGN();
+        }
 
-        // TODO A implémenter (vous pouvez retirer le return null)
-        return null;
+        if (elimination != null){
+            if (pieceDeplacee == Pion){
+                deplacement += depart.notationPGN().charAt(0);
+            }
+            deplacement += "x";
+        }
+
+        deplacement += arrivee.notationPGN();
+
+        if (promotion != null){
+            deplacement += "=" + promotion.notationPGN();
+        }
+
+
+        return deplacement;
 
     }
 }

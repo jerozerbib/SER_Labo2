@@ -36,7 +36,7 @@
 <!ATTLIST coup coup_special ( echec | mat | nulle ) #IMPLIED>
 
 <!-- Deplacements -->
-<!ELEMENT deplacement (elimination?, promotion?) >
+<!ELEMENT deplacement EMPTY>
 <!ATTLIST deplacement case_arrivee CDATA #REQUIRED>
 <!ATTLIST deplacement piece ( Tour | Cavalier | Fou | Dame | Roi | Pion ) #REQUIRED >
 <!ATTLIST deplacement case_depart CDATA #IMPLIED>

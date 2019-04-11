@@ -10,124 +10,8 @@ import java.io.PrintWriter;
 
 class Main {
 
-    public static void main(String ... args) throws Exception {
-        int i = 0;
-        final String filename  = "partie_%d.PGN" ;
-
-        final String xmlFile = "tournois_fse.xml";
-
-        SAXBuilder builder = new SAXBuilder();
-        Document doc       = builder.build(new File(xmlFile));
-
-        Element root       = doc.getRootElement();
-        Element tournois   = root.getChild("tournois");
-
-        //Parcours des tournois
-        for (Element tournoi : tournois.getChildren()){
-            Element parties = tournoi.getChild("parties");
-            for (Element partie : parties.getChildren()){
-                Element coups = partie.getChild("coups");
-                PrintWriter pw = new PrintWriter(new FileWriter(String.format(filename, i++)));
-                int tour = 1;
-                for (Element coup : coups.getChildren()){
-                    Element deplacement = coup.getChild("deplacement");
-                    ConvertissableEnPGN convertissableEnPGN;
-                    if (deplacement != null){
-                        String piece = deplacement.getAttributeValue("piece");
-                        String arrivee = deplacement.getAttributeValue("case_arrivee");
-                        String depart = deplacement.getAttributeValue("case_depart");
-                        String elimination = deplacement.getAttributeValue("elimination");
-                        String promotion = deplacement.getAttributeValue("promotion");
-                        String coupSpecial = coup.getAttributeValue("coup_special");
-
-                        Case Cdepart = null;
-                        if (depart != null && (depart.length() == 2)){
-                            Cdepart = new Case(depart.charAt(0), depart.charAt(1));
-                        }
-
-                        Case Carrivee = null;
-                        if (arrivee != null && (arrivee.length() == 2)){
-                            Carrivee = new Case(arrivee.charAt(0), arrivee.charAt(1));
-                        } else {
-                            throw new Error("Arrivee n'est pas definie ! Erreur !");
-                        }
-
-                        TypePiece eliminationT;
-                        if (elimination == null){
-                            eliminationT = null;
-                        } else {
-                            eliminationT = TypePiece.valueOf(elimination);
-                        }
-
-
-                        TypePiece promotionT;
-                        if (promotion == null){
-                            promotionT = null;
-                        } else {
-                            promotionT = TypePiece.valueOf(promotion);
-                        }
-
-                        CoupSpecial coupSpecT;
-                        if (coupSpecial == null){
-                            coupSpecT = null;
-                        } else {
-                            coupSpecT = CoupSpecial.valueOf(coupSpecial.toUpperCase());
-                        }
-
-                        convertissableEnPGN = new Deplacement(
-                                TypePiece.valueOf(piece),
-                                eliminationT,
-                                promotionT,
-                                coupSpecT,
-                                Cdepart,
-                                Carrivee);
-                    } else {
-                        Element roque = coup.getChild("roque");
-                        //Roque(CoupSpecial coupSpecial, TypeRoque typeRoque)
-                        String type = roque.getAttributeValue("type");
-                        String coupSpecial = coup.getAttributeValue("coup_special");
-
-
-                        TypeRoque typeRoque;
-                        switch (type){
-                            case "petit_roque":
-                                typeRoque = TypeRoque.PETIT;
-                                break;
-                            case "grand_roque":
-                                typeRoque = TypeRoque.GRAND;
-                                break;
-                            default:
-                                throw new Exception("Type de roque non supporte !");
-                        }
-
-                        CoupSpecial coupSpecT;
-                        if (coupSpecial == null){
-                            coupSpecT = null;
-                        } else{
-                            coupSpecT = CoupSpecial.valueOf(coupSpecial.toUpperCase());
-                        }
-
-
-                        convertissableEnPGN = new Roque(coupSpecT, typeRoque);
-
-                    }
-
-                    ++tour;
-                    if (tour%2 != 1){
-                        pw.print(tour / 2 + " ");
-                        pw.print(convertissableEnPGN.notationPGN() + " ");
-                    } else {
-                        pw.println(convertissableEnPGN.notationPGN());
-                    }
-
-
-                }
-                pw.flush();
-            }
-            ++i;
-        }
-
-
+    public static void main(String... args) throws Exception {
+        convertXmlToPgn();
 
 
 //        final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -190,6 +74,143 @@ class Main {
 //            e.printStackTrace();
 //        }
 
+    }
+
+    private static void convertXmlToPgn() throws Exception {
+        int i = 0;
+        final String filename = "partie_%d.PGN";
+
+        final String xmlFile = "tournois_fse.xml";
+
+        SAXBuilder builder = new SAXBuilder();
+        Document doc = builder.build(new File(xmlFile));
+
+        Element root = doc.getRootElement();
+        Element tournois = root.getChild("tournois");
+
+        convertTournaments(i, filename, tournois);
+    }
+
+    private static void convertTournaments(int i, String filename, Element tournois) throws Exception {
+        for (Element tournoi : tournois.getChildren()) {
+            Element parties = tournoi.getChild("parties");
+            for (Element partie : parties.getChildren()) {
+                traiterPartie(i, filename, partie);
+                ++i;
+            }
+            ++i;
+        }
+    }
+
+    private static void traiterPartie(int i, String filename, Element partie) throws Exception {
+        Element coups = partie.getChild("coups");
+        PrintWriter pw = new PrintWriter(new FileWriter(String.format(filename, i)));
+        int tour = 1;
+        for (Element coup : coups.getChildren()) {
+            Element deplacement = coup.getChild("deplacement");
+            ConvertissableEnPGN convertissableEnPGN;
+            if (deplacement != null) {
+                convertissableEnPGN = traiterDeplacement(coup, deplacement);
+            } else {
+                convertissableEnPGN = traiterRoque(coup);
+            }
+
+            ++tour;
+            if (tour % 2 != 1) {
+                pw.print(tour / 2 + " ");
+                pw.print(convertissableEnPGN.notationPGN() + " ");
+            } else {
+                pw.println(convertissableEnPGN.notationPGN());
+            }
+
+
+        }
+        pw.flush();
+    }
+
+    private static ConvertissableEnPGN traiterDeplacement(Element coup, Element deplacement) throws Exception {
+        ConvertissableEnPGN convertissableEnPGN;
+        String piece = deplacement.getAttributeValue("piece");
+        String arrivee = deplacement.getAttributeValue("case_arrivee");
+        String depart = deplacement.getAttributeValue("case_depart");
+        String elimination = deplacement.getAttributeValue("elimination");
+        String promotion = deplacement.getAttributeValue("promotion");
+        String coupSpecial = coup.getAttributeValue("coup_special");
+
+        Case cDepart = null;
+        if (depart != null && (depart.length() == 2)) {
+            cDepart = new Case(depart.charAt(0), depart.charAt(1) - '0');
+        }
+
+        Case cArrivee = null;
+        if (arrivee != null && (arrivee.length() == 2)) {
+            cArrivee = new Case(arrivee.charAt(0), arrivee.charAt(1) - '0');
+        } else {
+            throw new Error("Arrivee n'est pas definie ! Erreur !");
+        }
+
+        TypePiece eliminationT;
+        if (elimination == null) {
+            eliminationT = null;
+        } else {
+            eliminationT = TypePiece.valueOf(elimination);
+        }
+
+
+        TypePiece promotionT;
+        if (promotion == null) {
+            promotionT = null;
+        } else {
+            promotionT = TypePiece.valueOf(promotion);
+        }
+
+        CoupSpecial coupSpecT;
+        if (coupSpecial == null) {
+            coupSpecT = null;
+        } else {
+            coupSpecT = CoupSpecial.valueOf(coupSpecial.toUpperCase());
+        }
+
+        convertissableEnPGN = new Deplacement(
+                TypePiece.valueOf(piece),
+                eliminationT,
+                promotionT,
+                coupSpecT,
+                cDepart,
+                cArrivee);
+        return convertissableEnPGN;
+    }
+
+    private static ConvertissableEnPGN traiterRoque(Element coup) throws Exception {
+        ConvertissableEnPGN convertissableEnPGN;
+        Element roque = coup.getChild("roque");
+        //Roque(CoupSpecial coupSpecial, TypeRoque typeRoque)
+        String type = roque.getAttributeValue("type");
+        String coupSpecial = coup.getAttributeValue("coup_special");
+
+
+        TypeRoque typeRoque;
+        switch (type) {
+            case "petit_roque":
+                typeRoque = TypeRoque.PETIT;
+                break;
+            case "grand_roque":
+                typeRoque = TypeRoque.GRAND;
+                break;
+            default:
+                throw new Exception("Type de roque non supporte !");
+        }
+
+        CoupSpecial coupSpecT;
+        if (coupSpecial == null) {
+            coupSpecT = null;
+        } else {
+            coupSpecT = CoupSpecial.valueOf(coupSpecial.toUpperCase());
+        }
+
+
+        convertissableEnPGN = new Roque(coupSpecT, typeRoque);
+        return convertissableEnPGN;
     }
 
 }

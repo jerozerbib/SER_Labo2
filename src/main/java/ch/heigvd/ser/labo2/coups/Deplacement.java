@@ -1,3 +1,14 @@
+/*
+ -----------------------------------------------------------------------------------
+ Laboratoire : SER - Laboratoire 2
+ Fichier     : Deplacement.java
+ Auteur(s)   : Jeremy Zerbib, Guillaume Laubscher, Julien Quartier
+ Date        : 14/04/2019
+ But         : Cree un deplacement d'une piece avec les specificites du format PGN
+ Remarque(s) :
+ -----------------------------------------------------------------------------------
+*/
+
 package ch.heigvd.ser.labo2.coups;
 
 import static ch.heigvd.ser.labo2.coups.TypePiece.Pion;

@@ -1,3 +1,14 @@
+/*
+ -----------------------------------------------------------------------------------
+ Laboratoire : SER - Laboratoire 2
+ Fichier     : Roque.java
+ Auteur(s)   : Jeremy Zerbib, Guillaume Laubscher, Julien Quartier
+ Date        : 14/04/2019
+ But         : Cree un roque qui est un type specifique de coup
+ Remarque(s) :
+ -----------------------------------------------------------------------------------
+*/
+
 package ch.heigvd.ser.labo2.coups;
 
 public class Roque extends Coup {

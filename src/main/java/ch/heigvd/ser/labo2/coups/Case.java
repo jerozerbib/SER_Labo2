@@ -1,3 +1,15 @@
+/*
+ -----------------------------------------------------------------------------------
+ Laboratoire : SER - Laboratoire 2
+ Fichier     : Case.java
+ Auteur(s)   : Jeremy Zerbib, Guillaume Laubscher, Julien Quartier
+ Date        : 14/04/2019
+ But         : Cree une case
+ Remarque(s) :
+ -----------------------------------------------------------------------------------
+*/
+
+
 package ch.heigvd.ser.labo2.coups;
 
 public class Case implements ConvertissableEnPGN {
@@ -29,7 +41,7 @@ public class Case implements ConvertissableEnPGN {
      */
     @Override
     public String notationPGN() {
-        return String.format("%c%d", colonne, ligne);
+        return String.format("%c%c", colonne, ligne);
 
     }
 
